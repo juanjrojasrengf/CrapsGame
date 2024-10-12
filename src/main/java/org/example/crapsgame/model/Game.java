@@ -14,6 +14,7 @@ public class Game {
         this.point = 0;
     }
 
+
     public int getShoot() {
         return this.shoot;
     }
@@ -22,12 +23,29 @@ public class Game {
         return this.shootCount;
     }
 
+    public void setShootCount(){
+        this.shootCount += 1;
+        System.out.println("Tiro N° " + this.shootCount);
+    }
+
+    public void setPoint(int newPoint){
+        this.point = newPoint;
+    }
+
     public int getPoint() {
         return this.point;
     }
 
+    public void setWinner(){
+        this.win = true;
+    }
+
     public boolean isWin() {
         return this.win;
+    }
+
+    public void setLoser(){
+        this.lose = true;
     }
 
     public boolean isLose() {
