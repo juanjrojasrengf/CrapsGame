@@ -6,14 +6,17 @@ public class Game {
     private int point;
     private boolean win;
     private boolean lose;
-    Dice dice1, dice2;
+    public Dice dice1, dice2;
 
     public Game() {
         this.shootCount = 0;
         this.shoot = 0;
         this.point = 0;
+        this.win = false;
+        this.lose = false;
+        this.dice1 = new Dice();
+        this.dice2 = new Dice();
     }
-
 
     public int getShoot() {
         return this.shoot;
@@ -23,37 +26,43 @@ public class Game {
         return this.shootCount;
     }
 
-    public void setShootCount(){
-        this.shootCount += 1;
-        System.out.println("Tiro N° " + this.shootCount);
-    }
-
-    public void setPoint(int newPoint){
-        this.point = newPoint;
-    }
-
     public int getPoint() {
         return this.point;
-    }
-
-    public void setWinner(){
-        this.win = true;
     }
 
     public boolean isWin() {
         return this.win;
     }
 
-    public void setLoser(){
-        this.lose = true;
-    }
-
     public boolean isLose() {
         return this.lose;
     }
 
-    public int rollDices() {
-        return this.shoot;
+    public void resetGame() {
+        this.shootCount = 0;
+        this.shoot = 0;
+        this.point = 0;
+        this.win = false;
+        this.lose = false;
     }
 
+    public void setPoint(int point) {
+        this.point = point;
+    }
+
+    public void startGame() {
+        this.win = false;
+        this.lose = false;
+    }
+
+    public boolean isGameStarting() {
+        return this.point != 0;
+    }
+
+    public int rollDices() {
+        this.dice1.rollDice();
+        this.dice2.rollDice();
+        this.shoot = this.dice1.getValue() + this.dice2.getValue();
+        return this.shoot;
+    }
 }

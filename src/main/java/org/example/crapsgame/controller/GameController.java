@@ -4,30 +4,29 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import org.example.crapsgame.model.Dice;
-import org.example.crapsgame.model.Game;
 import org.example.crapsgame.view.alert.AlertBox;
 import org.example.crapsgame.view.alert.IAlertBox;
-
-import java.util.ArrayList;
+import org.example.crapsgame.model.Game;
 
 public class GameController {
 
     @FXML
-    private Label pointLabel, shootLabel;
+    private Label pointLabel, shootLabel, gamesWonLabel, gamesLostLabel;
 
     @FXML
     private ImageView dice1ImageView, dice2ImageView;
 
-    Dice dice1, dice2;
-    Game game = new Game();
-    ArrayList<Game> games = new ArrayList<Game>();
+    private Game game;
+    private int gamesWon = 0;
+    private int gamesLost = 0;
 
     public GameController() {
-        this.dice1 = new Dice();
-        this.dice2 = new Dice();
+        this.game = new Game();
     }
-    
+
     @FXML
     public void onHelpButtonClicked(ActionEvent event) {
         IAlertBox alertBox = new AlertBox();
@@ -39,43 +38,54 @@ public class GameController {
                 "5. Si sacas un 7 antes que el Punto, pierdes.";
         alertBox.showMessage("Ayuda", "Reglas del juego Craps", instructions);
     }
-    
+
+
     @FXML
     public void onHandleButtonRollTheDice(ActionEvent event) {
-        this.game.setShootCount();
-        this.dice1.rollDice();
-        this.dice2.rollDice();
-        this.dice1ImageView.setImage(this.dice1.getDiceImage());
-        this.dice2ImageView.setImage(this.dice2.getDiceImage());
+        int shoot = game.rollDices();
+        shootLabel.setText(String.valueOf(shoot));
+        dice1ImageView.setImage(game.dice1.getDiceImage());
+        dice2ImageView.setImage(game.dice2.getDiceImage());
 
-
-        int totalValue = this.dice1.getValue() + this.dice2.getValue();
-
-        if (this.game.getShootCount() == 1 ){
-            if (totalValue == 7 || totalValue == 11){
-                this.game.setWinner();
-                System.out.println("GANASTE!");
+        // Si el juego ha comenzado
+        if (!game.isGameStarting()) {
+            if (shoot == 7 || shoot == 11) {
+                gamesWon++;
+                gamesWonLabel.setText(String.valueOf(gamesWon));
+                showAlert("¡Ganaste!", "Has ganado automáticamente con un " + shoot + "!");
+                game.resetGame();
+            } else if (shoot == 2 || shoot == 3 || shoot == 12) {
+                gamesLost++;
+                gamesLostLabel.setText(String.valueOf(gamesLost));
+                showAlert("¡Perdiste!", "Has perdido automáticamente con un " + shoot + "!");
+                game.resetGame();
+            } else {
+                game.setPoint(shoot);
+                pointLabel.setText(String.valueOf(game.getPoint()));
+                game.startGame(); // Indica que el juego ha comenzado
             }
-            else if (totalValue == 2 || totalValue == 3 || totalValue == 12){
-                this.game.setLoser();
-                System.out.println("PERDISTE!");
-            }
-            else{
-                this.game.setPoint(totalValue);
-                System.out.println("Tu punto es: " + totalValue);
-            }
-        }
-        else{
-            if (totalValue != 7){
-                if (this.game.getPoint() == totalValue){
-                    this.game.setWinner();
-                    System.out.println("GANASTE");
-                }
-            }
-            else{
-                this.game.setLoser();
-                System.out.println("PERDISTE");
+        } else {
+            // Jugador ya ha establecido un punto
+            if (shoot == 7) {
+                gamesLost++;
+                gamesLostLabel.setText(String.valueOf(gamesLost));
+                showAlert("¡Perdiste!", "Has perdido al sacar un 7 antes de tu punto!");
+                game.resetGame();
+            } else if (shoot == game.getPoint()) {
+                gamesWon++;
+                gamesWonLabel.setText(String.valueOf(gamesWon));
+                showAlert("¡Ganaste!", "Has ganado al sacar tu punto: " + shoot + "!");
+                game.resetGame();
             }
         }
     }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
 }
