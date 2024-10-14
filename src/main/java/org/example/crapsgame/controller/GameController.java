@@ -10,6 +10,7 @@ import org.example.crapsgame.model.Dice;
 import org.example.crapsgame.view.alert.AlertBox;
 import org.example.crapsgame.view.alert.IAlertBox;
 import org.example.crapsgame.model.Game;
+import org.example.crapsgame.model.GameResultException;
 
 public class GameController {
 
@@ -39,44 +40,45 @@ public class GameController {
         alertBox.showMessage("Ayuda", "Reglas del juego Craps", instructions);
     }
 
-
     @FXML
     public void onHandleButtonRollTheDice(ActionEvent event) {
-        int shoot = game.rollDices();
-        shootLabel.setText(String.valueOf(shoot));
-        dice1ImageView.setImage(game.dice1.getDiceImage());
-        dice2ImageView.setImage(game.dice2.getDiceImage());
+        try {
+            int shoot = game.rollDices();
+            shootLabel.setText(String.valueOf(shoot));
+            dice1ImageView.setImage(game.dice1.getDiceImage());
+            dice2ImageView.setImage(game.dice2.getDiceImage());
 
-        // Si el juego ha comenzado
-        if (!game.isGameStarting()) {
-            if (shoot == 7 || shoot == 11) {
-                gamesWon++;
-                gamesWonLabel.setText(String.valueOf(gamesWon));
-                showAlert("¡Ganaste!", "Has ganado automáticamente con un " + shoot + "!");
-                game.resetGame();
-            } else if (shoot == 2 || shoot == 3 || shoot == 12) {
-                gamesLost++;
-                gamesLostLabel.setText(String.valueOf(gamesLost));
-                showAlert("¡Perdiste!", "Has perdido automáticamente con un " + shoot + "!");
-                game.resetGame();
+            // Si el juego ha comenzado
+            if (!game.isGameStarting()) {
+                if (shoot == 7 || shoot == 11) {
+                    gamesWon++;
+                    gamesWonLabel.setText(String.valueOf(gamesWon));
+                    throw new GameResultException("¡Ganaste automáticamente con un " + shoot + "!", true);
+                } else if (shoot == 2 || shoot == 3 || shoot == 12) {
+                    gamesLost++;
+                    gamesLostLabel.setText(String.valueOf(gamesLost));
+                    throw new GameResultException("¡Perdiste automáticamente con un " + shoot + "!", false);
+                } else {
+                    game.setPoint(shoot);
+                    pointLabel.setText(String.valueOf(game.getPoint()));
+                    game.startGame(); // Indica que el juego ha comenzado
+                }
             } else {
-                game.setPoint(shoot);
-                pointLabel.setText(String.valueOf(game.getPoint()));
-                game.startGame(); // Indica que el juego ha comenzado
+                // Jugador ya ha establecido un punto
+                if (shoot == 7) {
+                    gamesLost++;
+                    gamesLostLabel.setText(String.valueOf(gamesLost));
+                    throw new GameResultException("¡Perdiste al sacar un 7 antes de tu punto!", false);
+                } else if (shoot == game.getPoint()) {
+                    gamesWon++;
+                    gamesWonLabel.setText(String.valueOf(gamesWon));
+                    throw new GameResultException("¡Ganaste al sacar tu punto: " + shoot + "!", true);
+                }
             }
-        } else {
-            // Jugador ya ha establecido un punto
-            if (shoot == 7) {
-                gamesLost++;
-                gamesLostLabel.setText(String.valueOf(gamesLost));
-                showAlert("¡Perdiste!", "Has perdido al sacar un 7 antes de tu punto!");
-                game.resetGame();
-            } else if (shoot == game.getPoint()) {
-                gamesWon++;
-                gamesWonLabel.setText(String.valueOf(gamesWon));
-                showAlert("¡Ganaste!", "Has ganado al sacar tu punto: " + shoot + "!");
-                game.resetGame();
-            }
+        } catch (GameResultException e) {
+            // Manejar la excepción y mostrar la alerta correspondiente
+            showAlert(e.isWin() ? "¡Ganaste!" : "¡Perdiste!", e.getMessage());
+            game.resetGame(); // Reiniciar el juego después de ganar o perder
         }
     }
 
@@ -87,5 +89,5 @@ public class GameController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
 }
+
